@@ -21,7 +21,7 @@
         <repository>
             <id>github</id>
             <name>Redstoner-2019</name>
-            <url>https://maven.pkg.github.com/Redstoner-2019/ODGraphics</url>
+            <url>https://maven.pkg.github.com/Redstoner-2019/StatisticsServer</url>
         </repository>
     </distributionManagement>
 

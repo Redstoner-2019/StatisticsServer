@@ -13,7 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.UUID;
 
-public class Server {
+public class StatisticServer {
     public static int PORT = 8000;
     public static void main(String[] args) throws IOException {
         if(!new File("statsServer").exists()){
