@@ -1,5 +1,6 @@
 package me.redstoner2019;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -92,11 +93,12 @@ public class StatisticClient {
         return sendRequest(header);
     }
 
-    public JSONObject createChallenge(String game, String challenge) throws Exception{
+    public JSONObject createChallenge(String game, String challenge, JSONObject configuration) throws Exception{
         JSONObject packet = new JSONObject();
         packet.put("header","create-challenge");
         packet.put("game",game);
         packet.put("challenge",challenge);
+        packet.put("configuration",configuration);
         return sendRequest(packet);
     }
 
@@ -118,5 +120,16 @@ public class StatisticClient {
         packet.put("game", game);
         packet.put("challenge", challenge);
         return sendRequest(packet);
+    }
+    public JSONArray getGames() throws Exception {
+        JSONObject packet = new JSONObject();
+        packet.put("header", "get-games");
+        return sendRequest(packet).getJSONArray("games");
+    }
+    public JSONArray getChallenges(String game) throws Exception {
+        JSONObject packet = new JSONObject();
+        packet.put("header", "get-challenges");
+        packet.put("game",game);
+        return sendRequest(packet).getJSONArray("challenges");
     }
 }

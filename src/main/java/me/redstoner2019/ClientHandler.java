@@ -55,8 +55,11 @@ public class ClientHandler {
                                 case "create-challenge" -> {
                                     if(packet.has("game")){
                                         if(packet.has("challenge")){
-                                            StatisticServer.createChallenge(packet.getString("game"),packet.getString("challenge"));
-                                            response = getSuccessJSON();
+                                            if(packet.has("configuration")){
+                                                StatisticServer.createChallenge(packet.getString("game"),packet.getString("challenge"), packet.getJSONObject("configuration"));
+                                            } else {
+                                                response = getErrorJSON("'configuration' is missing.");
+                                            }
                                         } else {
                                             response = getErrorJSON("'challenge' is missing.");
                                         }
@@ -80,13 +83,26 @@ public class ClientHandler {
                                         response = getErrorJSON("'uuid' is missing.");
                                     }
                                 }
+                                case "get-challenges" -> {
+                                    if(packet.has("game")){
+                                        response = getSuccessJSON();
+                                        response.put("challenges",StatisticServer.getChallenges(packet.getString("game")));
+                                    } else {
+                                        response = getErrorJSON("'game' is missing.");
+                                    }
+                                }
+                                case "get-games" -> {
+                                    response = getSuccessJSON();
+                                    response.put("games",StatisticServer.getGames());
+                                }
                                 case "get-challenge" -> {
                                     if(packet.has("game")){
                                         if(packet.has("challenge")){
-                                            StatisticServer.createChallenge(packet.getString("game"),packet.getString("challenge"));
+                                            StatisticServer.createChallenge(packet.getString("game"),packet.getString("challenge"),new JSONObject());
                                             JSONArray entries = StatisticServer.getChallengeEntries(packet.getString("game"),packet.getString("challenge"));
                                             response = new JSONObject();
                                             response.put("entries",entries);
+                                            response.put("configuration",StatisticServer.getChallengeConfiguration(packet.getString("game"),packet.getString("challenge")));
                                         } else {
                                             response = getErrorJSON("'challenge' is missing.");
                                         }

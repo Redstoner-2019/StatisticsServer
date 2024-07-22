@@ -18,7 +18,19 @@ public class StatisticServer {
     public static void main(String[] args) throws IOException {
         if(!new File("statsServer").exists()){
             new File("statsServer").mkdirs();
-            createChallenge("fnaf-1","endless-mode");
+            if(!new File("statsServer/games.json").exists()) {
+                new File("statsServer/games.json").createNewFile();
+                JSONArray games = new JSONArray();
+                games.put("FNaF");
+                writeStringToFile(games.toString(),new File("statsServer/games.json"));
+            }
+            JSONObject endlessmodeConfig = new JSONObject();
+            endlessmodeConfig.put("endless-mode",true);
+            endlessmodeConfig.put("freddy-ai",20);
+            endlessmodeConfig.put("bonnie-ai",20);
+            endlessmodeConfig.put("chica-ai",20);
+            endlessmodeConfig.put("foxy-ai",20);
+            createChallenge("fnaf-1","endless-mode",endlessmodeConfig);
         }
         ServerSocket serverSocket = new ServerSocket(PORT);
 
@@ -29,7 +41,7 @@ public class StatisticServer {
     }
 
     public static void addEntryToChallenge(String game, String challenge, JSONObject entry) throws IOException {
-        createChallenge(game,challenge);
+        createChallenge(game,challenge, new JSONObject());
         String entryUUID = createEntry(game,challenge,entry);
 
         File file = new File("statsServer/" + game + "/" + challenge + ".json");
@@ -43,9 +55,31 @@ public class StatisticServer {
     }
 
     public static JSONArray getChallengeEntries(String game, String challenge) throws IOException {
-        createChallenge(game,challenge);
-        File file = new File("statsServer/" + game + "/" + challenge + ".json");
+        createChallenge(game,challenge, new JSONObject());
+        File file = new File("statsServer/" + game + "/" + challenge + "/" + challenge + ".json");
         return new JSONObject(readFile(file)).getJSONArray("entries");
+    }
+
+    public static JSONArray getGames(){
+        try {
+            return new JSONArray(readFile(new File("statsServer/games.json")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JSONArray getChallenges(String game){
+        try {
+            return new JSONArray(readFile(new File("statsServer/" + game + "/challenges.json")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JSONObject getChallengeConfiguration(String game, String challenge) throws IOException {
+        createChallenge(game,challenge, new JSONObject());
+        File file = new File("statsServer/" + game + "/" + challenge + "/" + challenge + ".json");
+        return new JSONObject(readFile(file)).getJSONObject("configuration");
     }
 
     public static JSONObject getEntry(String entryUUID) throws IOException {
@@ -61,17 +95,36 @@ public class StatisticServer {
         if(gameExists(game)) return;
         File file = new File("statsServer/" +game);
         file.mkdirs();
+        File gamesFile = new File("statsServer/games.json");
+        try {
+            JSONArray games = new JSONArray(readFile(gamesFile));
+            games.put(game);
+            writeStringToFile(games.toString(),gamesFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static void createChallenge(String game, String challenge) throws IOException {
+    public static void createChallenge(String game, String challenge, JSONObject configuration) throws IOException {
         if(!gameExists(game)) createGame(game);
         if(challengeExists(game, challenge)) return;
-        File file = new File("statsServer/" + game + "/" + challenge + ".json");
+        File file = new File("statsServer/" + game + "/" + challenge + "/" + challenge +  ".json");
+        file.getParentFile().mkdirs();
         file.createNewFile();
         JSONObject object = new JSONObject();
         JSONArray entries = new JSONArray();
         object.put("entries",entries);
+        object.put("configuration",configuration);
         writeStringToFile(object,file);
+        if(!new File("statsServer/" + game + "/challenges.json").exists()) {
+            new File("statsServer/" + game + "/challenges.json").getParentFile().mkdirs();
+            new File("statsServer/" + game + "/challenges.json").createNewFile();
+            JSONArray challenges = new JSONArray();
+            writeStringToFile(challenges.toString(),new File("statsServer/" + game + "/challenges.json"));
+        }
+        JSONArray challenges = new JSONArray(readFile(new File("statsServer/" + game + "/challenges.json")));
+        challenges.put(challenge);
+        writeStringToFile(challenges.toString(),new File("statsServer/" + game + "/challenges.json"));
     }
 
     public static boolean gameExists(String game){
@@ -80,7 +133,7 @@ public class StatisticServer {
     }
 
     public static boolean challengeExists(String game, String challenge){
-        File file = new File("statsServer/" + game + "/" + challenge + ".json");
+        File file = new File("statsServer/" + game + "/" + challenge + "/" + challenge + ".json");
         return file.exists();
     }
 
